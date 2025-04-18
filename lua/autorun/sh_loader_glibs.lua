@@ -1,0 +1,44 @@
+GPYMOUSSS = GPYMOUSSS or {}
+GPYMOUSSS.SQL = GPYMOUSSS.SQL or {}
+
+if SERVER then
+	-- Module responsive
+	AddCSLuaFile("libraries/resp/responsive.lua")
+	AddCSLuaFile("libraries/resp/panel.lua")
+	AddCSLuaFile("libraries/resp/draw.lua")
+	AddCSLuaFile("libraries/resp/materials.lua")
+	AddCSLuaFile("libraries/resp/anims.lua")
+
+	-- Module MySQLoo
+	include("libraries/sql/query_handler.lua")
+	include("libraries/sql/connect.lua")
+	include("libraries/sql/create_table.lua")
+	include("libraries/sql/add_column.lua")
+	include("libraries/sql/drop_column.lua")
+	include("libraries/sql/insert.lua")
+	include("libraries/sql/select.lua")
+	include("libraries/sql/update.lua")
+	include("libraries/sql/delete.lua")
+	include("libraries/sql/close.lua")
+	include("libraries/sql/init.lua")
+	include("libraries/log/logs.lua")
+
+	-- Module networking
+	AddCSLuaFile("libraries/net/receive.lua")
+	AddCSLuaFile("libraries/net/send_server.lua")
+	include("libraries/net/receive.lua")
+	include("libraries/net/send_client.lua")
+end
+
+if CLIENT then
+	-- Module responsive
+	include("libraries/resp/responsive.lua")
+	include("libraries/resp/panel.lua")
+	include("libraries/resp/draw.lua")
+	include("libraries/resp/materials.lua")
+	include("libraries/resp/anims.lua")
+
+	-- Module networking
+	include("libraries/net/receive.lua")
+	include("libraries/net/send_server.lua")
+end
