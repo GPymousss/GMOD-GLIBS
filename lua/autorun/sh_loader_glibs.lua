@@ -1,5 +1,5 @@
 GPYMOUSSS = GPYMOUSSS or {}
-GPYMOUSSS.SQL = GPYMOUSSS.SQL or {}
+GPYMOUSSS.GLibs = false
 
 if SERVER then
 	-- Module responsive
@@ -8,6 +8,13 @@ if SERVER then
 	AddCSLuaFile("libraries/resp/draw.lua")
 	AddCSLuaFile("libraries/resp/materials.lua")
 	AddCSLuaFile("libraries/resp/anims.lua")
+
+	-- Module Debug
+
+	AddCSLuaFile("libraries/debug/config.lua")
+	AddCSLuaFile("libraries/debug/utils.lua")
+	include("libraries/debug/config.lua")
+	include("libraries/debug/utils.lua")
 
 	-- Module MySQLoo
 	include("libraries/sql/query_handler.lua")
@@ -38,7 +45,13 @@ if CLIENT then
 	include("libraries/resp/materials.lua")
 	include("libraries/resp/anims.lua")
 
+	-- Module Debug
+	include("libraries/debug/config.lua")
+	include("libraries/debug/utils.lua")
+
 	-- Module networking
 	include("libraries/net/receive.lua")
 	include("libraries/net/send_server.lua")
 end
+
+GPYMOUSSS.GLibs = true

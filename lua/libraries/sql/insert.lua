@@ -16,6 +16,17 @@ function gQueryInsert(tableName, data, callback)
 		)
 
 		local result = sql.Query(query)
+
+		gSQLDebugPrint("Insert", "Inserting data in SQLite", {
+			status = result ~= false and "success" or "error",
+			query = query,
+			error = result == false and sql.LastError() or nil,
+			data = {
+				table = tableName,
+				values = data
+			}
+		})
+
 		if callback then callback(result) end
 		return
 	end
@@ -31,15 +42,26 @@ function gQueryInsert(tableName, data, callback)
 		table.insert(values, data[col])
 	end
 
-	local q = GPYMOUSSS.SQL.db:prepare(string.format("INSERT INTO %s (%s) VALUES (%s)",
+	local queryStr = string.format("INSERT INTO %s (%s) VALUES (%s)",
 		tableName,
 		table.concat(columns, ", "),
 		table.concat(placeholders, ", ")
-	))
+	)
+
+	local q = GPYMOUSSS.SQL.db:prepare(queryStr)
 
 	for i, value in ipairs(values) do
 		q:setString(i, tostring(value == nil and "NULL" or value))
 	end
+
+	gSQLDebugPrint("Insert", "Inserting data in MySQL", {
+		status = "info",
+		query = queryStr,
+		data = {
+			table = tableName,
+			values = data
+		}
+	})
 
 	gHandleQuery(q, callback)
 end

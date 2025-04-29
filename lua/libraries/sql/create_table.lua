@@ -39,6 +39,13 @@ function gQueryCreateTable(tableName, columns, callback)
 		local query = string.format("CREATE TABLE IF NOT EXISTS %s (%s)", tableName, table.concat(columnDefs, ", "))
 		local result = sql.Query(query)
 
+		gSQLDebugPrint("CreateTable", "Creating table in SQLite", {
+			status = result ~= false and "success" or "error",
+			query = query,
+			error = result == false and sql.LastError() or nil,
+			data = columns
+		})
+
 		if callback then callback(result) end
 		return
 	end
@@ -55,6 +62,14 @@ function gQueryCreateTable(tableName, columns, callback)
 		end
 	end
 
-	local q = GPYMOUSSS.SQL.db:query(string.format("CREATE TABLE IF NOT EXISTS %s (%s)", tableName, table.concat(columnDefs, ", ")))
+	local queryStr = string.format("CREATE TABLE IF NOT EXISTS %s (%s)", tableName, table.concat(columnDefs, ", "))
+	local q = GPYMOUSSS.SQL.db:query(queryStr)
+
+	gSQLDebugPrint("CreateTable", "Creating table in MySQL", {
+		status = "info",
+		query = queryStr,
+		data = columns
+	})
+
 	gHandleQuery(q, callback)
 end

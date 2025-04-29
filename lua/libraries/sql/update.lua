@@ -17,6 +17,18 @@ function gQueryUpdate(tableName, data, conditions, callback)
 		end
 
 		local result = sql.Query(query)
+
+		gSQLDebugPrint("Update", "Updating data in SQLite", {
+			status = result ~= false and "success" or "error",
+			query = query,
+			error = result == false and sql.LastError() or nil,
+			data = {
+				table = tableName,
+				values = data,
+				conditions = conditions
+			}
+		})
+
 		if callback then callback(result) end
 		return
 	end
@@ -31,7 +43,7 @@ function gQueryUpdate(tableName, data, conditions, callback)
 		table.insert(values, value)
 	end
 
-	local query = string.format("UPDATE %s SET %s", tableName, table.concat(setPairs, ", "))
+	local queryStr = string.format("UPDATE %s SET %s", tableName, table.concat(setPairs, ", "))
 
 	if conditions then
 		local whereClause = {}
@@ -39,13 +51,23 @@ function gQueryUpdate(tableName, data, conditions, callback)
 			table.insert(whereClause, string.format("%s = ?", col))
 			table.insert(values, value)
 		end
-		query = query .. " WHERE " .. table.concat(whereClause, " AND ")
+		queryStr = queryStr .. " WHERE " .. table.concat(whereClause, " AND ")
 	end
 
-	local q = GPYMOUSSS.SQL.db:prepare(query)
+	local q = GPYMOUSSS.SQL.db:prepare(queryStr)
 	for i, value in ipairs(values) do
 		q:setString(i, tostring(value == nil and "NULL" or value))
 	end
-	
+
+	gSQLDebugPrint("Update", "Updating data in MySQL", {
+		status = "info",
+		query = queryStr,
+		data = {
+			table = tableName,
+			values = data,
+			conditions = conditions
+		}
+	})
+
 	gHandleQuery(q, callback)
 end

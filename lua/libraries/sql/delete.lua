@@ -11,13 +11,24 @@ function gQueryDelete(tableName, conditions, callback)
 		end
 
 		local result = sql.Query(query)
+
+		gSQLDebugPrint("Delete", "Deleting data from SQLite", {
+			status = result ~= false and "success" or "error",
+			query = query,
+			error = result == false and sql.LastError() or nil,
+			data = {
+				table = tableName,
+				conditions = conditions
+			}
+		})
+
 		if callback then callback(result) end
 		return
 	end
 
 	if not GPYMOUSSS.SQL.db then return end
 
-	local query = string.format("DELETE FROM %s", tableName)
+	local queryStr = string.format("DELETE FROM %s", tableName)
 	local values = {}
 
 	if conditions then
@@ -26,13 +37,22 @@ function gQueryDelete(tableName, conditions, callback)
 			table.insert(whereClause, string.format("%s = ?", col))
 			table.insert(values, value)
 		end
-		query = query .. " WHERE " .. table.concat(whereClause, " AND ")
+		queryStr = queryStr .. " WHERE " .. table.concat(whereClause, " AND ")
 	end
 
-	local q = GPYMOUSSS.SQL.db:prepare(query)
+	local q = GPYMOUSSS.SQL.db:prepare(queryStr)
 	for i, value in ipairs(values) do
 		q:setString(i, tostring(value == nil and "NULL" or value))
 	end
+
+	gSQLDebugPrint("Delete", "Deleting data from MySQL", {
+		status = "info",
+		query = queryStr,
+		data = {
+			table = tableName,
+			conditions = conditions
+		}
+	})
 
 	gHandleQuery(q, callback)
 end

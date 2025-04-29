@@ -10,16 +10,50 @@ local columnTypes = {
 }
 
 local function ensureColumn(tableName, name, type)
-	if not columnTypes[type] then return false end
+	if not columnTypes[type] then 
+		gSQLDebugPrint("Logs", "Invalid column type: " .. type, {
+			status = "error",
+			data = {
+				table = tableName,
+				column = name,
+				type = type
+			}
+		})
+		return false 
+	end
 
 	if not tables[tableName].existingColumns[name] then
 		tables[tableName].pendingColumns[name] = columnTypes[type]
 
 		if GPYMOUSSS.SQL.usingSQLite then
-			sql.Query(string.format("ALTER TABLE %s ADD COLUMN %s %s", tableName, name, columnTypes[type]))
+			local query = string.format("ALTER TABLE %s ADD COLUMN %s %s", tableName, name, columnTypes[type])
+			local result = sql.Query(query)
+
+			gSQLDebugPrint("Logs", "Adding column to log table in SQLite", {
+				status = result ~= false and "success" or "error",
+				query = query,
+				error = result == false and sql.LastError() or nil,
+				data = {
+					table = tableName,
+					column = name,
+					type = columnTypes[type]
+				}
+			})
 		else
 			if GPYMOUSSS.SQL.db then
-				local q = GPYMOUSSS.SQL.db:query(string.format("ALTER TABLE %s ADD COLUMN %s %s", tableName, name, columnTypes[type]))
+				local queryStr = string.format("ALTER TABLE %s ADD COLUMN %s %s", tableName, name, columnTypes[type])
+				local q = GPYMOUSSS.SQL.db:query(queryStr)
+
+				gSQLDebugPrint("Logs", "Adding column to log table in MySQL", {
+					status = "info",
+					query = queryStr,
+					data = {
+						table = tableName,
+						column = name,
+						type = columnTypes[type]
+					}
+				})
+
 				q:start()
 			end
 		end
@@ -30,7 +64,12 @@ local function ensureColumn(tableName, name, type)
 end
 
 function gLogs(tableName, ...)
-	if not tableName then return false end
+	if not tableName then 
+		gSQLDebugPrint("Logs", "No table name provided", {
+			status = "error"
+		})
+		return false 
+	end
 
 	if not tables[tableName] then
 		tables[tableName] = {
@@ -46,12 +85,37 @@ function gLogs(tableName, ...)
 			date = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
 		}
 
+		gSQLDebugPrint("Logs", "Creating new log table", {
+			status = "info",
+			data = {
+				table = tableName
+			}
+		})
+
 		gQueryCreateTable(tableName, columns)
 	end
 
 	local args = {...}
-	if #args == 0 then return false end
-	if #args % 3 != 0 then return false end
+	if #args == 0 then 
+		gSQLDebugPrint("Logs", "No data provided", {
+			status = "error",
+			data = {
+				table = tableName
+			}
+		})
+		return false 
+	end
+
+	if #args % 3 ~= 0 then 
+		gSQLDebugPrint("Logs", "Invalid arguments format (must be in triplets: name, type, value)", {
+			status = "error",
+			data = {
+				table = tableName,
+				argCount = #args
+			}
+		})
+		return false 
+	end
 
 	local data = {}
 	local hasError = false
@@ -72,7 +136,23 @@ function gLogs(tableName, ...)
 		data[columnName] = value
 	end
 
-	if hasError or table.Count(data) == 0 then return false end
+	if hasError or table.Count(data) == 0 then 
+		gSQLDebugPrint("Logs", "No valid data to insert", {
+			status = "error",
+			data = {
+				table = tableName
+			}
+		})
+		return false 
+	end
+
+	gSQLDebugPrint("Logs", "Inserting log data", {
+		status = "info",
+		data = {
+			table = tableName,
+			values = data
+		}
+	})
 
 	if GPYMOUSSS.SQL.usingSQLite then
 		local columns = table.GetKeys(data)
@@ -88,9 +168,22 @@ function gLogs(tableName, ...)
 			table.concat(values, ", ")
 		)
 
-		return sql.Query(query) != false
+		local result = sql.Query(query)
+
+		gSQLDebugPrint("Logs", "Inserted log data in SQLite", {
+			status = result ~= false and "success" or "error",
+			query = query,
+			error = result == false and sql.LastError() or nil
+		})
+
+		return result ~= false
 	else
-		if not GPYMOUSSS.SQL.db then return false end
+		if not GPYMOUSSS.SQL.db then 
+			gSQLDebugPrint("Logs", "MySQL connection not available", {
+				status = "error"
+			})
+			return false 
+		end
 
 		local columns = table.GetKeys(data)
 		local placeholders = {}
@@ -101,17 +194,25 @@ function gLogs(tableName, ...)
 			table.insert(values, data[col])
 		end
 
-		local q = GPYMOUSSS.SQL.db:prepare(string.format("INSERT INTO %s (%s) VALUES (%s)",
+		local queryStr = string.format("INSERT INTO %s (%s) VALUES (%s)",
 			tableName,
 			table.concat(columns, ", "),
 			table.concat(placeholders, ", ")
-		))
+		)
+
+		local q = GPYMOUSSS.SQL.db:prepare(queryStr)
 
 		for i, value in ipairs(values) do
 			q:setString(i, tostring(value))
 		end
 
 		q:start()
+
+		gSQLDebugPrint("Logs", "Inserted log data in MySQL", {
+			status = "success",
+			query = queryStr
+		})
+
 		return true
 	end
 end
