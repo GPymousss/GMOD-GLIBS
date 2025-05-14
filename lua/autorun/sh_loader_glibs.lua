@@ -29,12 +29,6 @@ if SERVER then
 	include("libraries/sql/close.lua")
 	include("libraries/sql/init.lua")
 	include("libraries/log/logs.lua")
-
-	-- Module networking
-	AddCSLuaFile("libraries/net/receive.lua")
-	AddCSLuaFile("libraries/net/send_server.lua")
-	include("libraries/net/receive.lua")
-	include("libraries/net/send_client.lua")
 end
 
 if CLIENT then
@@ -48,10 +42,6 @@ if CLIENT then
 	-- Module Debug
 	include("libraries/debug/config.lua")
 	include("libraries/debug/utils.lua")
-
-	-- Module networking
-	include("libraries/net/receive.lua")
-	include("libraries/net/send_server.lua")
 end
 
 GPYMOUSSS.GLibs = true

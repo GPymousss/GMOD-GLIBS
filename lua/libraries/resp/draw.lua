@@ -4,55 +4,6 @@ local tex_corner32 = surface.GetTextureID("gui/corner32")
 local tex_corner64 = surface.GetTextureID("gui/corner64")
 local tex_corner512 = surface.GetTextureID("gui/corner512")
 
-function gSimpleText(text, font, x, y, colour, xalign, yalign)
-	text	= tostring(text)
-	font	= font		or "DermaDefault"
-	x		= x			or 0
-	y		= y			or 0
-	xalign	= xalign	or TEXT_ALIGN_LEFT
-	yalign	= yalign	or TEXT_ALIGN_TOP
-	surface.SetFont(font)
-	local w, h = surface.GetTextSize(text)
-
-	if (xalign == TEXT_ALIGN_CENTER) then
-		x = x - w / 2
-	elseif (xalign == TEXT_ALIGN_RIGHT) then
-		x = x - w
-	end
-
-	if (yalign == TEXT_ALIGN_CENTER) then
-		y = y - h / 2
-	elseif (yalign == TEXT_ALIGN_BOTTOM) then
-		y = y - h
-	end
-
-	local posX = math.ceil(gRespX(x))
-	local posY = math.ceil(gRespY(y))
-	surface.SetTextPos(posX, posY)
-
-	if (colour != nil) then
-		surface.SetTextColor(colour.r, colour.g, colour.b, colour.a)
-	else
-		surface.SetTextColor(255, 255, 255, 255)
-	end
-
-	surface.DrawText(text)
-	return gRespX(w), gRespY(h)
-end
-
-function gSimpleTextOutlined(text, font, x, y, colour, xalign, yalign, outlinewidth, outlinecolour)
-	local steps = (outlinewidth * 2) / 3
-	if (steps < 1) then steps = 1 end
-
-	for _x = -outlinewidth, outlinewidth, steps do
-		for _y = -outlinewidth, outlinewidth, steps do
-			gSimpleText(text, font, x + _x, y + _y, outlinecolour, xalign, yalign)
-		end
-	end
-
-	return gSimpleText(text, font, x, y, colour, xalign, yalign)
-end
-
 function gRoundedBox(bordersize, x, y, w, h, color)
 	return gRoundedBoxEx(bordersize, x, y, w, h, color, true, true, true, true)
 end

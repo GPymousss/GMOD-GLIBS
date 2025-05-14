@@ -34,7 +34,7 @@ end
 local function Initialize()
 	UpdateScaleFactors()
 	for i = 1, 100 do
-		gCreateRespFont("Syncopate:" .. i, "Syncopate", i, 400)
+		gCreateRespFont("Inter:" .. i, "Inter 18pt", i, 400)
 	end
 end
 
