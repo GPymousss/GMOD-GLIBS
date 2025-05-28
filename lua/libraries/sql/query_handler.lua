@@ -2,9 +2,18 @@ function gHandleQuery(query, callback)
 	if not query then return end
 
 	query.onSuccess = function(q, data)
+		local queryString = "Unknown"
+
+		if q and type(q.lastQuery) == "function" then
+			local success, result = pcall(function() return q:lastQuery() end)
+			if success and result then
+				queryString = result
+			end
+		end
+
 		gSQLDebugPrint("Query", "Query executed successfully", {
 			status = "success",
-			query = q:lastQuery(),
+			query = queryString,
 			data = data
 		})
 
@@ -12,9 +21,18 @@ function gHandleQuery(query, callback)
 	end
 
 	query.onError = function(q, err)
+		local queryString = "Unknown"
+
+		if q and type(q.lastQuery) == "function" then
+			local success, result = pcall(function() return q:lastQuery() end)
+			if success and result then
+				queryString = result
+			end
+		end
+
 		gSQLDebugPrint("Query", "Query failed", {
 			status = "error",
-			query = q:lastQuery(),
+			query = queryString,
 			error = err
 		})
 

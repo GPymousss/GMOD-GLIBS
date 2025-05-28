@@ -5,12 +5,10 @@ if SERVER then
 	-- Module responsive
 	AddCSLuaFile("libraries/resp/responsive.lua")
 	AddCSLuaFile("libraries/resp/panel.lua")
-	AddCSLuaFile("libraries/resp/draw.lua")
 	AddCSLuaFile("libraries/resp/materials.lua")
 	AddCSLuaFile("libraries/resp/anims.lua")
 
 	-- Module Debug
-
 	AddCSLuaFile("libraries/debug/config.lua")
 	AddCSLuaFile("libraries/debug/utils.lua")
 	include("libraries/debug/config.lua")
@@ -29,19 +27,25 @@ if SERVER then
 	include("libraries/sql/close.lua")
 	include("libraries/sql/init.lua")
 	include("libraries/log/logs.lua")
+
+	-- Module Anims
+	AddCSLuaFile("libraries/anims/anims.lua")
+	include("libraries/anims/anims.lua")
 end
 
 if CLIENT then
 	-- Module responsive
 	include("libraries/resp/responsive.lua")
 	include("libraries/resp/panel.lua")
-	include("libraries/resp/draw.lua")
 	include("libraries/resp/materials.lua")
 	include("libraries/resp/anims.lua")
 
 	-- Module Debug
 	include("libraries/debug/config.lua")
 	include("libraries/debug/utils.lua")
+
+	-- Module Anims
+	include("libraries/anims/anims.lua")
 end
 
 GPYMOUSSS.GLibs = true
