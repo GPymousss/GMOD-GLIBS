@@ -23,6 +23,11 @@ function gQueryAddColumn(tableName, columnName, columnDefinition, callback)
 			}
 		})
 
+		gLogQuery("ADD_COLUMN", tableName, {
+			column = columnName,
+			definition = columnDefinition
+		}, result, result == false and sql.LastError() or nil)
+
 		if callback then callback(result) end
 		return
 	end
@@ -42,5 +47,12 @@ function gQueryAddColumn(tableName, columnName, columnDefinition, callback)
 		}
 	})
 
-	gHandleQuery(q, callback)
+	gHandleQuery(q, function(result, error)
+		gLogQuery("ADD_COLUMN", tableName, {
+			column = columnName,
+			definition = columnDefinition
+		}, result, error)
+
+		if callback then callback(result, error) end
+	end, queryStr)
 end

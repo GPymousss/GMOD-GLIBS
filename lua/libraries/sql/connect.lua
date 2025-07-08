@@ -4,8 +4,7 @@ local CONFIG_SQL = {
 		username = "",
 		password = "",
 		database = "",
-		port = "",
-		socket = ""
+		port = ""
 	}
 }
 
@@ -27,13 +26,12 @@ function gInitializeMySQL()
 		CONFIG_SQL.MySQL.username,
 		CONFIG_SQL.MySQL.password,
 		CONFIG_SQL.MySQL.database,
-		CONFIG_SQL.MySQL.port,
-		CONFIG_SQL.MySQL.socket
+		CONFIG_SQL.MySQL.port
 	)
 
 	GPYMOUSSS.SQL.db.onConnected = function()
 		GPYMOUSSS.SQL.usingSQLite = false
-		
+
 		gSQLDebugPrint("Connect", "Connected to MySQL", {
 			status = "success",
 			query = "MySQL Connection",
@@ -43,14 +41,14 @@ function gInitializeMySQL()
 				port = CONFIG_SQL.MySQL.port
 			}
 		})
-		
+
 		hook.Run("gCreateTableSQL")
 	end
 
 	GPYMOUSSS.SQL.db.onConnectionFailed = function(db, err)
 		GPYMOUSSS.SQL.usingSQLite = true
 		sql.Query("BEGIN TRANSACTION")
-		
+
 		gSQLDebugPrint("Connect", "Failed to connect to MySQL, fallback to SQLite", {
 			status = "error",
 			query = "MySQL Connection",
@@ -61,7 +59,7 @@ function gInitializeMySQL()
 				port = CONFIG_SQL.MySQL.port
 			}
 		})
-		
+
 		hook.Run("gCreateTableSQL")
 	end
 

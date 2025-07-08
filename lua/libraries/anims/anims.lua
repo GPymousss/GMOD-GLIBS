@@ -3,7 +3,7 @@ if SERVER then
 
 	util.AddNetworkString( "gAnims" )
 
-	function Player:SetAnim( seq )
+	function Player:gSetAnim( seq )
 		net.Start("gAnims")
 			net.WriteEntity( self )
 			net.WriteString( seq )

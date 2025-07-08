@@ -50,9 +50,10 @@ function gQueryDelete(tableName, conditions, callback)
 		query = queryStr,
 		data = {
 			table = tableName,
-			conditions = conditions
+			conditions = conditions,
+			params = values
 		}
 	})
 
-	gHandleQuery(q, callback)
+	gHandleQuery(q, callback, queryStr, values)
 end

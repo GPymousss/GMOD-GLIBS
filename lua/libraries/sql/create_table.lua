@@ -46,6 +46,8 @@ function gQueryCreateTable(tableName, columns, callback)
 			data = columns
 		})
 
+		gLogQuery("CREATE_TABLE", tableName, columns, result, result == false and sql.LastError() or nil)
+
 		if callback then callback(result) end
 		return
 	end
@@ -71,5 +73,9 @@ function gQueryCreateTable(tableName, columns, callback)
 		data = columns
 	})
 
-	gHandleQuery(q, callback)
+	gHandleQuery(q, function(result, error)
+		gLogQuery("CREATE_TABLE", tableName, columns, result, error)
+		
+		if callback then callback(result, error) end
+	end, queryStr)
 end

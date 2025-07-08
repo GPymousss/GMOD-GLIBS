@@ -1,4 +1,5 @@
 local tables = {}
+local queryHistory = {}
 
 local columnTypes = {
 	STRING = "VARCHAR(255)",
@@ -25,13 +26,14 @@ local function ensureColumn(tableName, name, type)
 	if not tables[tableName].existingColumns[name] then
 		tables[tableName].pendingColumns[name] = columnTypes[type]
 
+		local actualQuery = string.format("ALTER TABLE %s ADD COLUMN %s %s", tableName, name, columnTypes[type])
+
 		if GPYMOUSSS.SQL.usingSQLite then
-			local query = string.format("ALTER TABLE %s ADD COLUMN %s %s", tableName, name, columnTypes[type])
-			local result = sql.Query(query)
+			local result = sql.Query(actualQuery)
 
 			gSQLDebugPrint("Logs", "Adding column to log table in SQLite", {
 				status = result ~= false and "success" or "error",
-				query = query,
+				query = actualQuery,
 				error = result == false and sql.LastError() or nil,
 				data = {
 					table = tableName,
@@ -41,12 +43,11 @@ local function ensureColumn(tableName, name, type)
 			})
 		else
 			if GPYMOUSSS.SQL.db then
-				local queryStr = string.format("ALTER TABLE %s ADD COLUMN %s %s", tableName, name, columnTypes[type])
-				local q = GPYMOUSSS.SQL.db:query(queryStr)
+				local q = GPYMOUSSS.SQL.db:query(actualQuery)
 
 				gSQLDebugPrint("Logs", "Adding column to log table in MySQL", {
 					status = "info",
-					query = queryStr,
+					query = actualQuery,
 					data = {
 						table = tableName,
 						column = name,
@@ -54,7 +55,7 @@ local function ensureColumn(tableName, name, type)
 					}
 				})
 
-				q:start()
+				gHandleQuery(q, nil, actualQuery)
 			end
 		end
 
@@ -154,65 +155,138 @@ function gLogs(tableName, ...)
 		}
 	})
 
-	if GPYMOUSSS.SQL.usingSQLite then
-		local columns = table.GetKeys(data)
-		local values = {}
-
-		for _, col in ipairs(columns) do
-			table.insert(values, sql.SQLStr(tostring(data[col])))
+	gQueryInsert(tableName, data, function(result, error)
+		if error then
+			gSQLDebugPrint("Logs", "Failed to insert log data", {
+				status = "error",
+				error = error,
+				data = {
+					table = tableName,
+					values = data
+				}
+			})
+		else
+			gSQLDebugPrint("Logs", "Log data inserted successfully", {
+				status = "success",
+				data = {
+					table = tableName,
+					values = data
+				}
+			})
 		end
+	end)
 
-		local query = string.format("INSERT INTO %s (%s) VALUES (%s)", 
-			tableName,
-			table.concat(columns, ", "), 
-			table.concat(values, ", ")
-		)
+	return true
+end
+
+function gLogQuery(queryType, tableName, queryData, result, error)
+	local logData = {
+		query_type = queryType,
+		table_name = tableName,
+		query_data = util.TableToJSON(queryData or {}),
+		success = error == nil,
+		error_message = error or "",
+		execution_time = os.date("%Y-%m-%d %H:%M:%S")
+	}
+
+	table.insert(queryHistory, logData)
+
+	if #queryHistory > 1000 then
+		table.remove(queryHistory, 1)
+	end
+end
+
+function gGetQueryHistory(limit)
+	limit = limit or 100
+	local history = {}
+
+	for i = math.max(1, #queryHistory - limit + 1), #queryHistory do
+		table.insert(history, queryHistory[i])
+	end
+
+	return history
+end
+
+function gClearQueryHistory()
+	queryHistory = {}
+	gSQLDebugPrint("Logs", "Query history cleared", {
+		status = "info"
+	})
+end
+
+function gCreateQueryLogsTable()
+	if GPYMOUSSS.SQL.usingSQLite then
+		local query = [[
+			CREATE TABLE IF NOT EXISTS gquery_logs (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+				query_type VARCHAR(255),
+				table_name VARCHAR(255),
+				query_data TEXT,
+				success INTEGER,
+				error_message TEXT,
+				execution_time VARCHAR(255)
+			)
+		]]
 
 		local result = sql.Query(query)
 
-		gSQLDebugPrint("Logs", "Inserted log data in SQLite", {
+		gSQLDebugPrint("Logs", "Creating gquery_logs table in SQLite", {
 			status = result ~= false and "success" or "error",
 			query = query,
 			error = result == false and sql.LastError() or nil
 		})
-
-		return result ~= false
 	else
-		if not GPYMOUSSS.SQL.db then 
-			gSQLDebugPrint("Logs", "MySQL connection not available", {
-				status = "error"
+		if not GPYMOUSSS.SQL.db then return end
+
+		local query = [[
+			CREATE TABLE IF NOT EXISTS gquery_logs (
+				id INTEGER PRIMARY KEY AUTO_INCREMENT,
+				date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+				query_type VARCHAR(255),
+				table_name VARCHAR(255),
+				query_data TEXT,
+				success BOOLEAN,
+				error_message TEXT,
+				execution_time VARCHAR(255)
+			)
+		]]
+
+		local q = GPYMOUSSS.SQL.db:query(query)
+
+		gSQLDebugPrint("Logs", "Creating gquery_logs table in MySQL", {
+			status = "info",
+			query = query
+		})
+
+		q.onSuccess = function()
+			gSQLDebugPrint("Logs", "gquery_logs table created successfully", {
+				status = "success",
+				query = query
 			})
-			return false 
 		end
 
-		local columns = table.GetKeys(data)
-		local placeholders = {}
-		local values = {}
-
-		for _, col in ipairs(columns) do
-			table.insert(placeholders, "?")
-			table.insert(values, data[col])
-		end
-
-		local queryStr = string.format("INSERT INTO %s (%s) VALUES (%s)",
-			tableName,
-			table.concat(columns, ", "),
-			table.concat(placeholders, ", ")
-		)
-
-		local q = GPYMOUSSS.SQL.db:prepare(queryStr)
-
-		for i, value in ipairs(values) do
-			q:setString(i, tostring(value))
+		q.onError = function(_, err)
+			gSQLDebugPrint("Logs", "Failed to create gquery_logs table", {
+				status = "error",
+				query = query,
+				error = err
+			})
 		end
 
 		q:start()
-
-		gSQLDebugPrint("Logs", "Inserted log data in MySQL", {
-			status = "success",
-			query = queryStr
-		})
-
-		return true
 	end
+end
+
+function gSaveQueryToLogs(queryType, tableName, queryData, result, error)
+	local data = {
+		query_type = queryType,
+		table_name = tableName,
+		query_data = util.TableToJSON(queryData or {}),
+		success = error == nil and 1 or 0,
+		error_message = error or "",
+		execution_time = os.date("%Y-%m-%d %H:%M:%S")
+	}
+
+	gQueryInsert("gquery_logs", data)
 end
