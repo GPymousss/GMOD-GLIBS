@@ -4,15 +4,14 @@ GPYMOUSSS.Debug.Enabled = true
 GPYMOUSSS.Debug.Verbose = true
 
 GPYMOUSSS.Debug.Config = {
-	Connect = true,
-	Close = true,
+	SQLite = true,
+	MySQL = true,
 	CreateTable = true,
-	AddColumn = true,
-	DropColumn = true,
 	Insert = true,
 	Select = true,
 	Update = true,
 	Delete = true,
+	Connection = true,
 	Logs = true
 }
 
@@ -59,15 +58,14 @@ function gResetSQLDebug()
 	GPYMOUSSS.Debug.Verbose = true
 
 	GPYMOUSSS.Debug.Config = {
-		Connect = true,
-		Close = true,
+		SQLite = true,
+		MySQL = true,
 		CreateTable = true,
-		AddColumn = true,
-		DropColumn = true,
 		Insert = true,
 		Select = true,
 		Update = true,
 		Delete = true,
+		Connection = true,
 		Logs = true
 	}
 

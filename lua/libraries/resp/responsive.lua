@@ -1,10 +1,20 @@
 local BASE_WIDTH = 1920
 local BASE_HEIGHT = 1080
-local scaleX, scaleY
+local BASE_RATIO = 16/9
+local scaleX, scaleY, aspectRatio
 
 local function UpdateScaleFactors()
-	scaleX = ScrW() / BASE_WIDTH
-	scaleY = ScrH() / BASE_HEIGHT
+	local screenW = ScrW()
+	local screenH = ScrH()
+
+	aspectRatio = screenW / screenH
+	scaleY = screenH / BASE_HEIGHT
+
+	if math.abs(aspectRatio - BASE_RATIO) < 0.01 then
+		scaleX = screenW / BASE_WIDTH
+	else
+		scaleX = scaleY * (aspectRatio / BASE_RATIO)
+	end
 end
 
 function gRespX(value)
@@ -34,7 +44,7 @@ end
 local function Initialize()
 	UpdateScaleFactors()
 	for i = 1, 100 do
-		gCreateRespFont("Inter:" .. i, "Inter 18pt", i, 400)
+		gCreateRespFont("Inter:" .. i, "Lora", i, 400)
 	end
 end
 

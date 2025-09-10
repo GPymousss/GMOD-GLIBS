@@ -13,20 +13,26 @@ if SERVER then
 	AddCSLuaFile("libraries/debug/utils.lua")
 	include("libraries/debug/config.lua")
 	include("libraries/debug/utils.lua")
+	include("libraries/debug/sqlite.lua")
+	include("libraries/debug/mysql.lua")
 
-	-- Module MySQLoo
-	include("libraries/sql/query_handler.lua")
-	include("libraries/sql/connect.lua")
-	include("libraries/sql/create_table.lua")
-	include("libraries/sql/add_column.lua")
-	include("libraries/sql/drop_column.lua")
-	include("libraries/sql/insert.lua")
-	include("libraries/sql/select.lua")
-	include("libraries/sql/update.lua")
-	include("libraries/sql/delete.lua")
-	include("libraries/sql/close.lua")
-	include("libraries/sql/init.lua")
-	include("libraries/log/logs.lua")
+	-- Module SQLite
+	include("libraries/sqlite/utils.lua")
+	include("libraries/sqlite/create.lua")
+	include("libraries/sqlite/insert.lua")
+	include("libraries/sqlite/select.lua")
+	include("libraries/sqlite/update.lua")
+	include("libraries/sqlite/delete.lua")
+
+	-- Module MySQL
+	include("libraries/mysql/init.lua")
+	include("libraries/mysql/utils.lua")
+	include("libraries/mysql/connect.lua")
+	include("libraries/mysql/create.lua")
+	include("libraries/mysql/insert.lua")
+	include("libraries/mysql/select.lua")
+	include("libraries/mysql/update.lua")
+	include("libraries/mysql/delete.lua")
 
 	-- Module Anims
 	AddCSLuaFile("libraries/anims/anims.lua")
@@ -34,7 +40,7 @@ if SERVER then
 end
 
 if CLIENT then
-	-- Module responsive
+	-- Module Responsive
 	include("libraries/resp/responsive.lua")
 	include("libraries/resp/panel.lua")
 	include("libraries/resp/materials.lua")
